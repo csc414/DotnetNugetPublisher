@@ -18,8 +18,8 @@ namespace DotnetNugetPublisher
                 return;
             }
 
-            var projectDir = args[args.Length - 1];
-            if(!Directory.Exists(projectDir))
+            var projectDir = args[args.Length - 1].TrimEnd('\\');
+            if (!Directory.Exists(projectDir))
             {
                 Console.WriteLine("{0}目录不存在，请在解决方案资源管理器选中一个项目再进行操作。", projectDir);
                 return;
@@ -48,7 +48,6 @@ namespace DotnetNugetPublisher
                 }
             }
             publishDir.Delete(true);
-            Console.ReadKey();
         }
 
         static void ExcuteCommand(string command, Action<Process, string> outputAction = null)
