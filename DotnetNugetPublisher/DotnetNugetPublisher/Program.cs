@@ -14,14 +14,14 @@ namespace DotnetNugetPublisher
         {
             if (args.Length == 0)
             {
-                Console.WriteLine("参数无效");
+                Console.WriteLine("参数无效，请在解决方案资源管理器选中一个项目再进行操作。");
                 return;
             }
 
             var projectDir = args[args.Length - 1];
             if(!Directory.Exists(projectDir))
             {
-                Console.WriteLine("{0}目录不存在", projectDir);
+                Console.WriteLine("{0}目录不存在，请在解决方案资源管理器选中一个项目再进行操作。", projectDir);
                 return;
             }
 
