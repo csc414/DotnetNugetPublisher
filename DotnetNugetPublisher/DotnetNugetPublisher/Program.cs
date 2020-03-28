@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace DotnetNugetPublisher
 {
@@ -34,23 +35,27 @@ namespace DotnetNugetPublisher
             if (!dir.Exists)
                 dir.Create();
             var publishDir = dir.CreateSubdirectory(Guid.NewGuid().ToString("N"));
-            ExcuteCommand($"dotnet pack -c {configuration} -o {publishDir.FullName}{packAdditional} {projectDir}", (p, message) => Console.WriteLine(message));
+            ExcuteCommand($"dotnet pack -c {configuration} -o {publishDir.FullName} {packAdditional.Trim()} {projectDir}", outputAction: message => { 
+                Console.WriteLine(message); 
+                return true; 
+            });
             var files = publishDir.GetFiles();
             if(files.Count() > 0)
             {
                 foreach (var file in files)
                 {
-                    ExcuteCommand($"dotnet nuget push {file.FullName} -s {source} -k {apiKey} {pushAdditional}", (p, message) => {
+                    ExcuteCommand($"dotnet nuget push {file.FullName} -s {source} -k {apiKey} {pushAdditional}", outputAction: message => {
                         Console.WriteLine(message);
                         if (message.StartsWith("error:"))
-                            p.Kill();
+                            return false;
+                        return true;
                     });
                 }
             }
             publishDir.Delete(true);
         }
 
-        static void ExcuteCommand(string command, Action<Process, string> outputAction = null)
+        static void ExcuteCommand(string command, Func<string, bool> outputAction = null)
         {
             using (var process = new Process())
             {
@@ -62,11 +67,13 @@ namespace DotnetNugetPublisher
                 startInfo.CreateNoWindow = true; //不创建窗口  
                 startInfo.RedirectStandardOutput = true;
                 process.StartInfo = startInfo;
+                var enabled = true;
                 process.OutputDataReceived += (sender, e) =>
                 {
-                    if (e.Data == null)
+                    if (e.Data == null || !enabled)
                         return;
-                    outputAction?.Invoke(process, e.Data);
+                    if(outputAction != null)
+                        enabled = outputAction.Invoke(e.Data);
                 };
                 process.Start();
                 process.BeginOutputReadLine();
