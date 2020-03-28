@@ -1,5 +1,5 @@
 # DotnetNugetPublisher
-# 一键打包&发布
+# 一键打包&发布Nuget包
 ## 配置
 
 1. 下载并解压Release.zip
